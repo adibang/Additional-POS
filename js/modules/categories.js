@@ -1,4 +1,4 @@
-// Categories Module
+// Categories Module.
 class CategoriesManager {
     constructor() {
         this.categories = [];
