@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Barcode Generator</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- JavaScript Modules -->
+    <script src="js/config.js" defer></script>
+    <script src="js/utils/helpers.js" defer></script>
+    <script src="js/utils/notifications.js" defer></script>
+    <script src="js/utils/validations.js" defer></script>
+    
+    <script src="js/modules/database.js" defer></script>
+    <script src="js/modules/printer.js" defer></script>
+    <script src="js/modules/barcode.js" defer></script>
+    <script src="js/modules/categories.js" defer></script>
+    <script src="js/modules/products.js" defer></script>
+    <script src="js/modules/settings.js" defer></script>
+    <script src="js/modules/ui.js" defer></script>
+    
+    <script src="js/app.js" defer></script>
+    
+    <style>
+        /* Inline minimal styles for initial loading */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #FFFFFF;
+            min-height: 100vh;
+        }
+        
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #006B54;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Initial loading screen */
+        #initial-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial Loading Screen -->
+    <div id="initial-loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; color: #006B54; font-weight: 600;">Memuat aplikasi...</p>
+    </div>
+    
+    <!-- Main App Container -->
+    <div id="app">
+        <!-- App content will be loaded dynamically by JavaScript -->
+    </div>
 
+    <script>
+        // Hide initial loading when app is ready
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loading = document.getElementById('initial-loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
