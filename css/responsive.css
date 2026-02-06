@@ -1,1 +1,42 @@
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .product-card {
+        height: 220px;
+    }
+    
+    .product-image {
+        height: 130px;
+    }
+    
+    .modal-content {
+        max-width: 95%;
+    }
+    
+    .weight-presets {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+}
 
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .product-card {
+        height: 200px;
+    }
+}
