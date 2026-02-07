@@ -34,6 +34,10 @@ let isLongPress = false;
 let isFirstLoad = true;
 let categoryViewMode = 'tabs'; // 'tabs' or 'dropdown'
 
+// ==================== SOUND SETTINGS ====================
+let soundEnabled = true;
+let soundVolume = 0.5;
+
 // Weight presets
 let weightPresets = {
     preset1: 100,
@@ -103,6 +107,110 @@ function hideError() {
     if (errorState) errorState.style.display = 'none';
     if (mainContent) mainContent.style.display = 'block';
     if (stickyContainer) stickyContainer.style.display = 'block';
+}
+
+// ==================== SOUND FUNCTIONS ====================
+function initSoundControls() {
+    // Load sound settings from localStorage
+    const savedSoundEnabled = localStorage.getItem('soundEnabled');
+    if (savedSoundEnabled !== null) {
+        soundEnabled = JSON.parse(savedSoundEnabled);
+    }
+    
+    const savedVolume = localStorage.getItem('soundVolume');
+    if (savedVolume !== null) {
+        soundVolume = parseFloat(savedVolume);
+    }
+    
+    updateSoundButton();
+    
+    // Setup sound toggle button
+    const soundToggleBtn = document.getElementById('sound-toggle-btn');
+    if (soundToggleBtn) {
+        soundToggleBtn.addEventListener('click', toggleSound);
+    }
+    
+    // Setup volume slider
+    const volumeSlider = document.getElementById('volume-slider');
+    if (volumeSlider) {
+        volumeSlider.value = soundVolume * 100;
+        volumeSlider.addEventListener('input', function(e) {
+            soundVolume = e.target.value / 100;
+            localStorage.setItem('soundVolume', soundVolume);
+        });
+    }
+    
+    // Show/hide volume slider
+    soundToggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const slider = document.getElementById('volume-slider-container');
+        slider.style.display = slider.style.display === 'flex' ? 'none' : 'flex';
+    });
+    
+    // Close volume slider when clicking outside
+    document.addEventListener('click', function(e) {
+        const slider = document.getElementById('volume-slider-container');
+        const toggleBtn = document.getElementById('sound-toggle-btn');
+        
+        if (slider && !slider.contains(e.target) && !toggleBtn.contains(e.target)) {
+            slider.style.display = 'none';
+        }
+    });
+}
+
+function updateSoundButton() {
+    const button = document.getElementById('sound-toggle-btn');
+    const icon = document.getElementById('sound-icon');
+    
+    if (!button || !icon) return;
+    
+    if (soundEnabled) {
+        button.classList.remove('muted');
+        icon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+    } else {
+        button.classList.add('muted');
+        icon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
+    }
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem('soundEnabled', JSON.stringify(soundEnabled));
+    updateSoundButton();
+    
+    // Play sound when enabling
+    if (soundEnabled) {
+        playButtonSound();
+    }
+}
+
+function playButtonSound() {
+    if (!soundEnabled) return;
+    
+    const sound = document.getElementById('button-sound');
+    if (sound) {
+        sound.volume = soundVolume;
+        sound.currentTime = 0;
+        sound.play().catch(e => {
+            console.log("Sound play error:", e);
+            // Jika autoplay diblokir, kita bisa mencoba lagi dengan user interaction
+        });
+    }
+}
+
+function addButtonPressEffect(button) {
+    if (!button) return;
+    
+    // Add animation class
+    button.classList.add('button-press');
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+        button.classList.remove('button-press');
+    }, 100);
+    
+    // Play sound
+    playButtonSound();
 }
 
 // ==================== DATABASE FUNCTIONS ====================
@@ -1039,7 +1147,10 @@ function updateWeightPresetButtons() {
             <div class="weight-preset-label">Preset ${i}</div>
             <div class="weight-preset-value">${presetValue}g</div>
         `;
-        button.onclick = () => setWeightFromPreset(presetKey);
+        button.onclick = (e) => {
+            addButtonPressEffect(e.target.closest('button'));
+            setWeightFromPreset(presetKey);
+        };
         
         presetContainer.appendChild(button);
     }
@@ -1091,6 +1202,7 @@ async function initApp() {
         initLongPressEvents();
         setupSearch();
         setupCategoryViewMode();
+        initSoundControls(); // Initialize sound controls
         
         console.log('App initialized successfully');
         isFirstLoad = false;
@@ -1172,6 +1284,8 @@ function showCategoryModal() {
         `;
         
         item.onclick = () => {
+            addButtonPressEffect(item);
+            
             if (searchQuery) {
                 const searchInput = document.getElementById('product-search');
                 if (searchInput) {
@@ -1346,6 +1460,8 @@ function renderCategories() {
         }
         
         tab.onclick = () => {
+            addButtonPressEffect(tab);
+            
             if (!isLongPress) {
                 const searchInput = document.getElementById('product-search');
                 if (searchInput && searchInput.value.trim() !== '') {
@@ -1389,7 +1505,6 @@ function renderProducts() {
         emptyState.style.gridColumn = '1 / -1';
         emptyState.style.textAlign = 'center';
         emptyState.style.padding = '40px 20px';
-        emptyStyle = document.createElement('style');
         emptyState.innerHTML = `
             <svg class="icon" viewBox="0 0 24 24" style="width:60px;height:60px;color:#d9d9d9;margin-bottom:20px;">
                 <circle cx="12" cy="12" r="10"/>
@@ -1420,16 +1535,19 @@ function renderProducts() {
             const deleteBtn = card.querySelector('.delete-btn');
             
             editBtn.onclick = (event) => {
+                addButtonPressEffect(event.target.closest('button'));
                 event.stopPropagation();
                 editProduct(product.id);
             };
             
             deleteBtn.onclick = (event) => {
+                addButtonPressEffect(event.target.closest('button'));
                 event.stopPropagation();
                 deleteProductHandler(product.id);
             };
             
             card.onclick = () => {
+                addButtonPressEffect(card);
                 currentProduct = product;
                 showWeightModal();
             };
@@ -1454,7 +1572,10 @@ function renderProducts() {
         </div>
     `;
     
-    addCard.onclick = () => showProductModal();
+    addCard.onclick = () => {
+        addButtonPressEffect(addCard);
+        showProductModal();
+    };
     container.appendChild(addCard);
 }
 
@@ -1691,6 +1812,7 @@ function showProductModal(product = null) {
     
     if (imageInput) {
         imageInput.onchange = function(e) {
+            addButtonPressEffect(imageUploadArea);
             const file = e.target.files[0];
             if (!file) return;
             
@@ -1775,6 +1897,8 @@ function handleCategorySelect() {
 }
 
 async function saveProductHandler() {
+    addButtonPressEffect(event.target.closest('button'));
+    
     const name = document.getElementById('product-name-input')?.value.trim();
     const code = document.getElementById('product-code-input')?.value.trim();
     const categorySelect = document.getElementById('product-category-select');
@@ -1903,6 +2027,7 @@ async function saveProductHandler() {
 }
 
 function closeProductModal() {
+    addButtonPressEffect(event.target.closest('button'));
     document.getElementById('product-modal').style.display = 'none';
     resetProductForm();
 }
@@ -1946,6 +2071,9 @@ function closeWeightModal() {
 }
 
 function appendNumber(num) {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (num === '00') {
         if (weightValue.length <= digitConfig.weight - 2) {
             weightValue += '00';
@@ -1958,11 +2086,17 @@ function appendNumber(num) {
 }
 
 function clearWeight() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     weightValue = '';
     document.getElementById('display-weight').textContent = '0';
 }
 
 function backspaceWeight() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (weightValue.length > 0) {
         weightValue = weightValue.slice(0, -1);
     }
@@ -2121,6 +2255,9 @@ function updatePrinterButton() {
 }
 
 function togglePrinterConnection() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (isPrinterConnected) {
         disconnectFromPrinter();
     } else {
@@ -2192,6 +2329,9 @@ async function disconnectFromPrinter() {
 
 // ==================== BARCODE FUNCTIONS ====================
 function generateBarcode() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (!currentProduct) {
         showNotification('Pilih produk terlebih dahulu!', 'error');
         return;
@@ -2237,6 +2377,9 @@ function generateBarcode() {
 }
 
 async function printBarcode() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     try {
         if (!currentProduct || !weightValue) {
             showNotification('Harap isi berat terlebih dahulu dan generate barcode', 'error');
@@ -2333,6 +2476,9 @@ async function printBarcode() {
 
 // ==================== SETTINGS MODAL FUNCTIONS ====================
 function showSettingsModal() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     const settingsContent = document.getElementById('settings-content');
     const uniqueCategories = categories.filter(c => c !== 'all');
     const totalDigits = digitConfig.flex + digitConfig.category + digitConfig.product + digitConfig.weight;
@@ -2624,6 +2770,9 @@ function updateDesignPreview(design) {
 }
 
 async function addNewCategoryFromSettings() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     const input = document.getElementById('new-category-input-settings');
     const category = input.value.trim();
     
@@ -2653,6 +2802,9 @@ async function addNewCategoryFromSettings() {
 }
 
 async function editCategoryHandler(oldCategory) {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (oldCategory === 'all') return;
     
     const newCategory = prompt('Edit nama kategori:', oldCategory);
@@ -2684,6 +2836,9 @@ async function editCategoryHandler(oldCategory) {
 }
 
 async function deleteCategoryHandler(category) {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     if (category === 'all') return;
     
     if (!confirm(`Hapus kategori "${category}"?\nProduk dalam kategori ini akan dipindahkan ke kategori "Lainnya".`)) {
@@ -2734,10 +2889,15 @@ function updateDigitSummary() {
 }
 
 function closeSettingsModal() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
     document.getElementById('settings-modal').style.display = 'none';
 }
 
 async function saveSettingsConfig() {
+    const button = event.target.closest('button');
+    addButtonPressEffect(button);
+    
     const flex = parseInt(document.getElementById('flex-digits').value) || 2;
     const category = parseInt(document.getElementById('category-digits').value) || 2;
     const product = parseInt(document.getElementById('product-digits').value) || 4;
@@ -2846,6 +3006,7 @@ function showCategoryContextMenu(category, x, y) {
         Edit Kategori
     `;
     editItem.onclick = () => {
+        addButtonPressEffect(editItem);
         editCategoryHandler(category);
         menu.style.display = 'none';
     };
@@ -2857,6 +3018,7 @@ function showCategoryContextMenu(category, x, y) {
         Hapus Kategori
     `;
     deleteItem.onclick = () => {
+        addButtonPressEffect(deleteItem);
         deleteCategoryHandler(category);
         menu.style.display = 'none';
     };
